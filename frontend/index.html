@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentix | Beat ATS & Detect AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        background: 'var(--bg-color)',
+                        card: 'var(--card-bg)',
+                        bordercolor: 'var(--border-color)',
+                        primary: '#6366f1',
+                        secondary: '#d946ef',
+                        textmain: 'var(--text-main)',
+                        textmuted: 'var(--text-muted)'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+        }
+        
+        .dark {
+            --bg-color: #050505;
+            --card-bg: #111111;
+            --border-color: #222222;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-color); 
+            color: var(--text-main); 
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .gradient-text { background: linear-gradient(to right, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .glass-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        .glass-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(99, 102, 241, 0.15);
+            border-color: rgba(99, 102, 241, 0.5);
+        }
+        .btn-gradient { background: linear-gradient(135deg, #6366f1 0%, #d946ef 100%); transition: all 0.3s ease; }
+        .btn-gradient:hover { transform: translateY(-2px); box-shadow: 0 8px 25px -5px rgba(217, 70, 239, 0.5); }
+        .dropzone { transition: all 0.3s ease; border: 2px dashed var(--border-color); }
+        .dropzone:hover { border-color: #6366f1; background-color: rgba(99, 102, 241, 0.05); }
+        
+        /* Custom Progress Bar */
+        progress::-webkit-progress-bar { background-color: var(--border-color); border-radius: 9999px; }
+        progress::-webkit-progress-value { background: linear-gradient(90deg, #6366f1, #d946ef); border-radius: 9999px; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6366f1; }
+        
+        /* Tab Transitions */
+        .tab-content { display: none; }
+        .tab-content.active { 
+            display: block; 
+            animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; 
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col relative overflow-x-hidden">
+    
+    <!-- Background Glow Effects -->
+    <div class="fixed inset-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+        <div class="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/10 blur-[150px]"></div>
+        <div class="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-secondary/10 blur-[150px]"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="border-b border-bordercolor bg-background/80 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex-shrink-0 flex items-center">
+                    <h1 class="text-2xl font-extrabold gradient-text tracking-tight">Authentix</h1>
+                </div>
+                <div class="hidden md:flex space-x-8 h-16 items-center">
+                    <button id="nav-home" onclick="switchTab('home')" class="nav-btn h-full px-2 text-primary border-b-2 border-primary hover:text-primary transition font-medium">Home</button>
+                    <button id="nav-ats" onclick="switchTab('ats')" class="nav-btn h-full px-2 text-textmain border-b-2 border-transparent hover:text-primary transition font-medium">ATS Analyzer</button>
+                    <button id="nav-ai" onclick="switchTab('ai')" class="nav-btn h-full px-2 text-textmain border-b-2 border-transparent hover:text-primary transition font-medium">AI Detection</button>
+                    <button id="nav-humanize" onclick="switchTab('humanize')" class="nav-btn h-full px-2 text-textmain border-b-2 border-transparent hover:text-primary transition font-medium">Humanize</button>
+                    <button id="nav-cite" onclick="switchTab('cite')" class="nav-btn h-full px-2 text-textmain border-b-2 border-transparent hover:text-primary transition font-medium">IEEE Citations</button>
+                </div>
+                <!-- Theme Toggle Button -->
+                <button onclick="toggleTheme()" class="ml-4 p-2 rounded-full text-textmain hover:bg-card transition" id="themeToggleBtn">
+                    <svg id="moonIcon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                    <svg id="sunIcon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
+        
+        <!-- Home Tab -->
+        <div id="home" class="tab-content active text-center">
+            <h1 class="text-6xl font-extrabold gradient-text mb-4">Authentix</h1>
+            <h3 class="text-2xl text-textmuted mb-12">Beat ATS • Detect AI • Sound Human</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-left mt-16">
+                <div class="glass-card p-6 rounded-2xl">
+                    <h3 class="text-xl font-bold mb-3">📊 ATS Analyzer</h3>
+                    <p class="text-textmuted">Upload your resume and the job description. Our advanced NLP algorithms will score your match and give you the keywords you are missing.</p>
+                </div>
+                <div class="glass-card p-6 rounded-2xl">
+                    <h3 class="text-xl font-bold mb-3">🕵️ AI Detection</h3>
+                    <p class="text-textmuted">Paste any text to check its likelihood of being AI-generated. Protect your academic and professional integrity.</p>
+                </div>
+                <div class="glass-card p-6 rounded-2xl">
+                    <h3 class="text-xl font-bold mb-3">✍️ Text Humanizer</h3>
+                    <p class="text-textmuted">Transform robotic, AI-generated text into natural, flowing human prose in various professional tones.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ATS Analyzer Tab -->
+        <div id="ats" class="tab-content">
+            <h2 class="text-3xl font-bold mb-2">📊 ATS Score Analyzer</h2>
+            <p class="text-textmuted mb-8">Optimize your resume for Applicant Tracking Systems.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <div>
+                    <h4 class="text-lg font-medium mb-3">1. Upload Resume (PDF/DOCX)</h4>
+                    <div class="dropzone rounded-2xl p-8 text-center bg-card cursor-pointer relative" id="resumeDropzone">
+                        <input type="file" id="resumeFile" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept=".pdf,.docx,.txt">
+                        <svg class="mx-auto h-12 w-12 text-textmuted mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        <p id="fileNameDisplay" class="text-textmain font-medium">Click to upload or drag and drop</p>
+                        <p class="text-sm text-textmuted mt-1">PDF, DOCX up to 10MB</p>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-medium mb-3">2. Job Description</h4>
+                    <textarea id="jobDesc" class="w-full h-48 bg-card border border-bordercolor rounded-2xl p-4 text-textmain focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Paste the Job Description here..."></textarea>
+                </div>
+            </div>
+            
+            <button id="analyzeBtn" class="w-full btn-gradient py-4 rounded-xl font-bold text-lg mb-12 flex justify-center items-center">
+                <span id="analyzeBtnText">Analyze Resume</span>
+                <svg id="analyzeSpinner" class="animate-spin ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            </button>
+            
+            <!-- Results Dashboard -->
+            <div id="atsResults" class="hidden">
+                <hr class="border-bordercolor mb-8">
+                <h3 class="text-2xl font-bold mb-6">📈 Deep ATS Analysis</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div class="glass-card rounded-2xl p-8 flex flex-col items-center justify-center">
+                        <h4 class="text-lg text-textmuted mb-2">Overall ATS Match</h4>
+                        <div class="relative w-48 h-48 flex items-center justify-center">
+                            <!-- Simple CSS Circle Progress -->
+                            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                <path stroke-dasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#222" stroke-width="3"/>
+                                <path id="overallScoreSvg" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#00e5ff" stroke-width="3" stroke-linecap="round"/>
+                            </svg>
+                            <div class="absolute text-5xl font-bold" id="overallScoreText" style="color: #00e5ff;">0%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-card rounded-2xl p-8">
+                        <h4 class="text-lg font-bold mb-4">Detailed Breakdown</h4>
+                        <div id="subScoresContainer" class="space-y-4">
+                            <!-- Injected dynamically -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="glass-card rounded-2xl p-8">
+                        <h4 class="text-lg font-bold mb-4">🎯 Keyword Intelligence</h4>
+                        <div id="keywordBadges" class="flex flex-wrap gap-2 mb-4">
+                            <!-- Injected dynamically -->
+                        </div>
+                        <div id="missingKwsAlert" class="mt-4 p-4 rounded-lg bg-red-900/20 border border-red-500/30 text-red-200 hidden">
+                            <span class="font-bold">Top Missing Keywords:</span> <span id="missingKwsText"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-card rounded-2xl p-8">
+                        <h4 class="text-lg font-bold mb-4">🛠️ Actionable Recommendations</h4>
+                        <div id="warningsAlert" class="mb-4 p-4 rounded-lg bg-orange-900/20 border border-orange-500/30 text-orange-200 hidden">
+                            <p class="font-bold mb-2">🚨 ATS Compatibility Issues Found:</p>
+                            <ul id="warningsList" class="list-disc pl-5"></ul>
+                        </div>
+                        <ul id="recommendationsList" class="space-y-3 text-textmain mb-6">
+                            <!-- Injected dynamically -->
+                        </ul>
+                        
+                        <div id="optimizerSection" class="hidden border-t border-bordercolor pt-6 mt-6">
+                            <h4 class="text-lg font-bold text-primary mb-2">✨ One-Click Optimizer</h4>
+                            <p class="text-sm text-textmuted mb-4">Let AI automatically rewrite your resume to include the missing keywords.</p>
+                            <select id="optimizeModel" class="w-full bg-card border border-bordercolor rounded-xl p-3 text-textmain mb-4 focus:outline-none focus:border-primary">
+                                <option value="llama3">llama3</option>
+                                <option value="mistral">mistral</option>
+                                <option value="phi3">phi3</option>
+                            </select>
+                            <button id="optimizeBtn" class="w-full btn-gradient py-3 rounded-xl font-bold flex justify-center items-center">
+                                <span id="optimizeBtnText">Auto-Optimize Resume</span>
+                                <svg id="optimizeSpinner" class="animate-spin ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="optimizedResultSection" class="hidden mt-8 glass-card rounded-2xl p-8 border border-primary/50 relative">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold text-primary">✨ Optimized Resume Draft</h3>
+                        <button onclick="downloadText('optimizedResumeText', 'optimized_resume.txt')" class="text-sm bg-primary/20 hover:bg-primary/40 text-primary font-medium py-1 px-3 rounded transition flex items-center">
+                            ⬇️ Download
+                        </button>
+                    </div>
+                    <textarea id="optimizedResumeText" class="w-full h-96 bg-background border border-bordercolor rounded-xl p-6 text-textmain focus:outline-none" readonly></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <!-- AI Detection Tab -->
+        <div id="ai" class="tab-content">
+            <h2 class="text-3xl font-bold mb-2">🕵️ AI Plagiarism & Detection</h2>
+            <p class="text-textmuted mb-8">Paste your text below to analyze its probability of being AI-generated.</p>
+            
+            <textarea id="aiInputText" class="w-full h-64 bg-card border border-bordercolor rounded-2xl p-6 text-textmain focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary mb-6" placeholder="Paste text here... (minimum 10 words)"></textarea>
+            
+            <button id="detectAiBtn" class="w-full btn-gradient py-4 rounded-xl font-bold text-lg mb-12 flex justify-center items-center">
+                <span id="detectAiBtnText">Detect AI</span>
+                <svg id="detectAiSpinner" class="animate-spin ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            </button>
+            
+            <div id="aiResults" class="hidden">
+                <hr class="border-bordercolor mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="glass-card rounded-2xl p-8 flex flex-col items-center justify-center">
+                        <h4 class="text-lg text-textmuted mb-4">AI Probability</h4>
+                        <div class="relative w-48 h-48 flex items-center justify-center">
+                            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                <path stroke-dasharray="100, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#222" stroke-width="3"/>
+                                <path id="aiScoreSvg" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#f87171" stroke-width="3" stroke-linecap="round"/>
+                            </svg>
+                            <div class="absolute text-5xl font-bold" id="aiScoreText">0%</div>
+                        </div>
+                    </div>
+                    <div class="md:col-span-2 glass-card rounded-2xl p-8">
+                        <h3 class="text-xl font-bold mb-4">📄 Academic Integrity Report</h3>
+                        <p id="aiReportText" class="text-textmuted mb-6 leading-relaxed"></p>
+                        <div id="aiSuspiciousContainer" class="hidden">
+                            <h4 class="font-bold text-orange-400 mb-2">Suspicious AI Phrases Found:</h4>
+                            <div id="aiSuspiciousPhrases" class="flex flex-wrap gap-2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Humanize Tab -->
+        <div id="humanize" class="tab-content">
+            <h2 class="text-3xl font-bold mb-2">✍️ Text Humanizer</h2>
+            <p class="text-textmuted mb-8">Transform robotic AI text into natural, professional human prose.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
+                <div class="md:col-span-2">
+                    <textarea id="humanizeInputText" class="w-full h-64 bg-card border border-bordercolor rounded-2xl p-6 text-textmain focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Paste your AI text here..."></textarea>
+                </div>
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-textmuted mb-2">Select Tone</label>
+                        <select id="humanizeTone" class="w-full bg-card border border-bordercolor rounded-xl p-4 text-textmain focus:outline-none focus:border-primary">
+                            <option value="IEEE Standard">IEEE Standard</option>
+                            <option value="Professional">Professional</option>
+                            <option value="Confident">Confident</option>
+                            <option value="Conversational">Conversational</option>
+                            <option value="Academic">Academic</option>
+                            <option value="Friendly">Friendly</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-textmuted mb-2">Local Ollama Model</label>
+                        <select id="humanizeModel" class="w-full bg-card border border-bordercolor rounded-xl p-4 text-textmain focus:outline-none focus:border-primary">
+                            <option value="llama3">llama3</option>
+                            <option value="mistral">mistral</option>
+                            <option value="phi3">phi3</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <button id="humanizeBtn" class="w-full btn-gradient py-4 rounded-xl font-bold text-lg mb-2 flex justify-center items-center">
+                <span id="humanizeBtnText">Humanize Now ✨</span>
+                <svg id="humanizeSpinner" class="animate-spin ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            </button>
+            <p class="text-xs text-textmuted text-center mb-12 italic">Generating text using a local LLM can take 30-60 seconds depending on your hardware.</p>
+            
+            <div id="humanizeResults" class="hidden">
+                <hr class="border-bordercolor mb-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold">Result</h3>
+                    <button onclick="downloadText('humanizeAfter', 'humanized_text.txt')" class="text-sm bg-primary/20 hover:bg-primary/40 text-primary font-medium py-1 px-3 rounded transition flex items-center">
+                        ⬇️ Download
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div>
+                        <h4 class="text-lg text-textmuted mb-3">Before (AI)</h4>
+                        <div class="bg-card border border-bordercolor rounded-2xl p-6 text-textmuted whitespace-pre-wrap h-64 overflow-y-auto" id="humanizeBefore"></div>
+                    </div>
+                    <div>
+                        <h4 class="text-lg text-primary font-bold mb-3" id="humanizeAfterTitle">After (Human)</h4>
+                        <div class="glass-card border-primary/50 rounded-2xl p-6 text-textmain whitespace-pre-wrap h-64 overflow-y-auto" id="humanizeAfter"></div>
+                    </div>
+                </div>
+                
+                <div class="glass-card rounded-2xl p-6">
+                    <h4 class="font-bold mb-4">📝 Changes Log & Report</h4>
+                    <div id="humanizeReport" class="prose prose-invert max-w-none text-textmuted whitespace-pre-wrap"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Citation Generator Tab -->
+        <div id="cite" class="tab-content">
+            <h2 class="text-3xl font-bold mb-2">📚 IEEE Citation Generator</h2>
+            <p class="text-textmuted mb-8">Paste messy references or URLs below to automatically structure them into formal IEEE brackets.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
+                <div class="md:col-span-2">
+                    <textarea id="citeInputText" class="w-full h-64 bg-card border border-bordercolor rounded-2xl p-6 text-textmain focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" placeholder="Paste messy references, DOIs, or URLs here..."></textarea>
+                </div>
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-textmuted mb-2">Local Ollama Model</label>
+                        <select id="citeModel" class="w-full bg-card border border-bordercolor rounded-xl p-4 text-textmain focus:outline-none focus:border-primary">
+                            <option value="llama3">llama3</option>
+                            <option value="mistral">mistral</option>
+                            <option value="phi3">phi3</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <button id="citeBtn" class="w-full btn-gradient py-4 rounded-xl font-bold text-lg mb-2 flex justify-center items-center">
+                <span id="citeBtnText">Generate Citations</span>
+                <svg id="citeSpinner" class="animate-spin ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            </button>
+            <p class="text-xs text-textmuted text-center mb-12 italic">Generating citations using a local LLM can take 15-30 seconds depending on your hardware.</p>
+            
+            <div id="citeResults" class="hidden">
+                <hr class="border-bordercolor mb-8">
+                <div class="glass-card rounded-2xl p-8 border border-primary/50 relative">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-bold text-primary">✨ Formatted IEEE Citations</h3>
+                        <button onclick="downloadText('citeOutputText', 'ieee_citations.txt')" class="text-sm bg-primary/20 hover:bg-primary/40 text-primary font-medium py-1 px-3 rounded transition flex items-center">
+                            ⬇️ Download
+                        </button>
+                    </div>
+                    <textarea id="citeOutputText" class="w-full h-96 bg-background border border-bordercolor rounded-xl p-6 text-textmain focus:outline-none" readonly></textarea>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="border-t border-bordercolor py-8 mt-auto text-center text-textmuted text-sm">
+        Completely Free • Made in <span class="gradient-text font-bold">India</span>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
